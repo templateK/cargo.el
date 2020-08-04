@@ -318,7 +318,7 @@ for error reporting."
                (not (member name cargo-process--no-manifest-commands)))
       (concat "--manifest-path " (shell-quote-argument manifest-filename)))))
 
-(defun cargo-process--start (name command &optional last-cmd opens-external)
+(defun cargo-process--start (name command &optional last-cmd opens-external append-cmd)
   "Start the Cargo process NAME with the cargo command COMMAND.
 OPENS-EXTERNAL is non-nil if the COMMAND is expected to open an external application.
 Returns the created process."
@@ -343,7 +343,9 @@ Returns the created process."
     (setq cargo-process-last-command (list name command cmd))
     (let ((default-directory (or (cargo-process--workspace-root)
                                  default-directory)))
-      (compilation-start cmd 'cargo-process-mode (lambda(_) buffer)))
+      (if append-cmd
+          (compilation-start (concat cmd " -- " append-cmd) 'cargo-process-mode (lambda(_) buffer))
+        (compilation-start cmd 'cargo-process-mode (lambda(_) buffer))))
     (let ((process (get-buffer-process buffer)))
       (set-process-sentinel process 'cargo-process--finished-sentinel)
       process)))
